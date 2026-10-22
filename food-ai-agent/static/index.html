@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spice Garden - Order Online</title>
+<style>
+  :root {
+    --bg: #fffaf3; --card: #ffffff; --ink: #2b2118; --muted: #7a6a5c;
+    --brand: #c2410c; --brand-dark: #9a3412; --line: #efe3d3; --veg: #15803d; --nonveg: #b91c1c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+  header { background: var(--brand); color: #fff; padding: 28px 20px; text-align: center; }
+  header h1 { margin: 0 0 6px; font-size: 2rem; }
+  header p { margin: 0; opacity: .9; }
+  main { max-width: 1150px; margin: 0 auto; padding: 24px 16px 120px; display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .filters button { border: 1px solid var(--line); background: var(--card); padding: 7px 14px; border-radius: 999px; cursor: pointer; font: inherit; }
+  .filters button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+  .item { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .item h3 { margin: 0; font-size: 1rem; display: flex; gap: 8px; align-items: center; }
+  .item p { margin: 0; color: var(--muted); font-size: .88rem; flex: 1; }
+  .dot { width: 12px; height: 12px; border: 2px solid; border-radius: 2px; display: inline-grid; place-items: center; flex-shrink: 0; }
+  .dot::after { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .veg { color: var(--veg); } .nonveg { color: var(--nonveg); }
+  .row { display: flex; justify-content: space-between; align-items: center; }
+  .price { font-weight: 700; }
+  .ask { border: 0; background: none; color: var(--brand); cursor: pointer; font: inherit; font-size: .85rem; }
+  aside { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; align-self: start; position: sticky; top: 16px; }
+  aside h2 { margin: 0 0 10px; font-size: 1.1rem; }
+  .cart-line { display: flex; justify-content: space-between; font-size: .9rem; padding: 4px 0; }
+  .totals { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; font-size: .9rem; }
+  .totals .grand { font-weight: 700; font-size: 1rem; }
+  .empty { color: var(--muted); font-size: .9rem; }
+
+  /* Chat widget */
+  #chat-toggle { position: fixed; right: 20px; bottom: 20px; background: var(--brand); color: #fff; border: 0; border-radius: 999px; padding: 14px 20px; font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,.2); z-index: 10; }
+  #chat { position: fixed; right: 20px; bottom: 80px; width: min(380px, calc(100vw - 32px)); height: min(560px, calc(100vh - 110px)); background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.18); display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
+  #chat[hidden] { display: none; }
+  .chat-head { background: var(--brand); color: #fff; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .chat-head button { background: none; border: 0; color: #fff; cursor: pointer; font: inherit; opacity: .85; }
+  #log { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .msg { max-width: 85%; padding: 9px 12px; border-radius: 14px; white-space: pre-wrap; line-height: 1.4; font-size: .92rem; }
+  .bot { background: #f6ede1; align-self: flex-start; border-bottom-left-radius: 4px; }
+  .me { background: var(--brand); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .err { background: #fee2e2; color: #7f1d1d; align-self: flex-start; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 8px; }
+  .chips button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 5px 10px; font-size: .8rem; cursor: pointer; }
+  form { display: flex; border-top: 1px solid var(--line); }
+  form input { flex: 1; border: 0; padding: 12px; font: inherit; outline: none; }
+  form button { border: 0; background: var(--brand); color: #fff; padding: 0 18px; font: inherit; cursor: pointer; }
+  form button:disabled { background: #d6a68b; cursor: wait; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Spice Garden</h1>
+  <p>Authentic Indian food, delivered hot. Ask our AI assistant to order for you.</p>
+</header>
+
+<main>
+  <section>
+    <div class="filters" id="filters"></div>
+    <div class="grid" id="menu"></div>
+  </section>
+  <aside>
+    <h2>Your cart</h2>
+    <div id="cart"><p class="empty">Your cart is empty. Ask the assistant to add something!</p></div>
+  </aside>
+</main>
+
+<button id="chat-toggle">Chat to order</button>
+<div id="chat" hidden>
+  <div class="chat-head"><strong>Spice Garden Assistant</strong><button id="reset" title="Start over">New chat</button></div>
+  <div id="log"></div>
+  <div class="chips" id="chips"></div>
+  <form id="form"><input id="input" placeholder="Type a message..." autocomplete="off"><button id="send">Send</button></form>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const RUPEE = "₹";
+let sessionId = localStorage.getItem("sg_session");
+if (!sessionId) { sessionId = crypto.randomUUID(); localStorage.setItem("sg_session", sessionId); }
+
+const SUGGESTIONS = ["Show me veg dishes under ₹250", "What's your bestseller?", "Something not spicy for kids", "Track my order"];
+let menuItems = [], activeCat = "All";
+
+function renderMenu() {
+  const cats = ["All", ...new Set(menuItems.map(i => i.category))];
+  $("filters").innerHTML = "";
+  cats.forEach(c => {
+    const b = document.createElement("button");
+    b.textContent = c; b.className = c === activeCat ? "active" : "";
+    b.onclick = () => { activeCat = c; renderMenu(); };
+    $("filters").appendChild(b);
+  });
+  $("menu").innerHTML = "";
+  menuItems.filter(i => activeCat === "All" || i.category === activeCat).forEach(i => {
+    const el = document.createElement("div");
+    el.className = "item";
+    el.innerHTML = `<h3><span class="dot ${i.veg ? "veg" : "nonveg"}"></span><span></span></h3><p></p>
+      <div class="row"><span class="price">${RUPEE}${i.price}</span><button class="ask">Ask AI to add</button></div>`;
+    el.querySelector("h3 span:last-child").textContent = i.name + (i.spice >= 2 ? " 🌶" : "");
+    el.querySelector("p").textContent = i.description;
+    el.querySelector(".ask").onclick = () => { openChat(); send(`Add 1 ${i.name} to my cart`); };
+    $("menu").appendChild(el);
+  });
+}
+
+function renderCart(c) {
+  if (!c || !c.items.length) { $("cart").innerHTML = '<p class="empty">Your cart is empty. Ask the assistant to add something!</p>'; return; }
+  const box = document.createElement("div");
+  c.items.forEach(l => {
+    const row = document.createElement("div"); row.className = "cart-line";
+    row.innerHTML = "<span></span><span></span>";
+    row.children[0].textContent = `${l.qty} x ${l.name}`;
+    row.children[1].textContent = `${RUPEE}${l.line_total}`;
+    box.appendChild(row);
+  });
+  const t = document.createElement("div"); t.className = "totals";
+  t.innerHTML = `<div class="cart-line"><span>Subtotal</span><span>${RUPEE}${c.subtotal}</span></div>
+    <div class="cart-line"><span>GST (5%)</span><span>${RUPEE}${c.tax}</span></div>
+    <div class="cart-line"><span>Delivery</span><span>${c.delivery_fee ? RUPEE + c.delivery_fee : "Free"}</span></div>
+    <div class="cart-line grand"><span>Total</span><span>${RUPEE}${c.total}</span></div>`;
+  box.appendChild(t);
+  $("cart").replaceChildren(box);
+}
+
+function addMsg(text, cls) {
+  const m = document.createElement("div");
+  m.className = "msg " + cls; m.textContent = text;
+  $("log").appendChild(m); $("log").scrollTop = $("log").scrollHeight;
+  return m;
+}
+
+function renderChips() {
+  $("chips").innerHTML = "";
+  SUGGESTIONS.forEach(s => {
+    const b = document.createElement("button"); b.textContent = s;
+    b.onclick = () => send(s); $("chips").appendChild(b);
+  });
+}
+
+function openChat() {
+  $("chat").hidden = false;
+  if (!$("log").children.length) addMsg("Hi! 👋 I'm the Spice Garden assistant. I can recommend dishes, build your cart and place your order. What are you in the mood for?", "bot");
+  $("input").focus();
+}
+
+async function send(text) {
+  text = text.trim(); if (!text) return;
+  addMsg(text, "me"); $("chips").innerHTML = "";
+  $("input").value = ""; $("send").disabled = true;
+  const typing = addMsg("Typing...", "bot");
+  try {
+    const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId, message: text }) });
+    const data = await res.json();
+    typing.remove();
+    if (!res.ok) { addMsg(data.detail || "Something went wrong.", "err"); return; }
+    addMsg(data.reply, "bot"); renderCart(data.cart);
+  } catch (e) { typing.remove(); addMsg("Couldn't reach the server.", "err"); }
+  finally { $("send").disabled = false; $("input").focus(); }
+}
+
+$("chat-toggle").onclick = () => $("chat").hidden ? openChat() : ($("chat").hidden = true);
+$("form").onsubmit = (e) => { e.preventDefault(); send($("input").value); };
+$("reset").onclick = async () => {
+  await fetch(`/api/reset/${sessionId}`, { method: "POST" });
+  sessionId = crypto.randomUUID(); localStorage.setItem("sg_session", sessionId);
+  $("log").innerHTML = ""; renderCart(null); renderChips(); openChat();
+};
+
+fetch("/api/menu").then(r => r.json()).then(d => { menuItems = d.items; renderMenu(); });
+fetch(`/api/cart/${sessionId}`).then(r => r.json()).then(renderCart);
+renderChips();
+</script>
+</body>
+</html>
