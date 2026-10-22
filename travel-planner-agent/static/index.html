@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
+<title>Wanderly - AI Trip Planner</title>
+<style>
+  :root {
+    --bg: #eef6fb; --card: #ffffff; --ink: #0f2233; --muted: #557085;
+    --brand: #0369a1; --brand-dark: #0c4a6e; --accent: #0ea5e9; --soft: #e0f2fe; --line: #d4e5f0;
+    --shadow: 0 10px 30px rgba(12, 74, 110, .10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; color: var(--ink);
+    background: radial-gradient(circle at 10% 0%, #cff4fc 0, transparent 40%),
+                radial-gradient(circle at 90% 30%, #dbeafe 0, transparent 40%), var(--bg);
+    background-attachment: fixed;
+  }
+
+  /* Hero: sunset sky with mountain silhouettes */
+  header {
+    position: relative; overflow: hidden; color: #fff; text-align: center;
+    padding: 70px 20px 150px;
+    background: linear-gradient(180deg, #082f49 0%, #075985 35%, #0284c7 65%, #38bdf8 88%, #a5f3fc 100%);
+  }
+  header::before {
+    content: ""; position: absolute; left: 50%; bottom: 40px; width: 220px; height: 220px; transform: translateX(-50%);
+    border-radius: 50%; background: radial-gradient(circle, #ffffff 0%, #e0f2fe 40%, rgba(224,242,254,0) 70%); opacity: .55;
+  }
+  header svg { position: absolute; left: 0; bottom: -1px; width: 100%; height: 150px; }
+  header .inner { position: relative; z-index: 1; }
+  header .eyebrow { display: inline-block; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); backdrop-filter: blur(6px); padding: 5px 14px; border-radius: 999px; font-size: .82rem; letter-spacing: .04em; margin-bottom: 14px; }
+  header h1 { margin: 0 0 10px; font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: -.03em; text-shadow: 0 4px 24px rgba(0,0,0,.25); }
+  header p { margin: 0 auto; opacity: .95; max-width: 560px; font-size: 1.05rem; line-height: 1.5; }
+  header .cta { margin-top: 22px; background: #fff; color: var(--brand-dark); border: 0; border-radius: 999px; padding: 13px 26px; font: inherit; font-weight: 700; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.2); transition: transform .15s; }
+  header .cta:hover { transform: translateY(-2px); }
+
+  main { max-width: 1180px; margin: -40px auto 0; padding: 0 16px 120px; display: grid; grid-template-columns: 1fr 330px; gap: 24px; position: relative; z-index: 2; }
+  @media (max-width: 880px) { main { grid-template-columns: 1fr; } }
+  section, aside { background: rgba(255,255,255,.75); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.9); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); }
+  h2 { margin: 0 0 14px; font-size: 1.2rem; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .filters button { border: 1px solid var(--line); background: #fff; padding: 7px 15px; border-radius: 999px; cursor: pointer; font: inherit; font-size: .9rem; text-transform: capitalize; color: var(--ink); transition: all .15s; }
+  .filters button:hover { border-color: var(--brand); }
+  .filters button.active { background: linear-gradient(135deg, var(--brand), #0284c7); color: #fff; border-color: transparent; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+
+  .dest { background: var(--card); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 10px rgba(0,0,0,.05); transition: transform .2s, box-shadow .2s; }
+  .dest:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(12,74,110,.15); }
+  .banner { height: 120px; position: relative; display: flex; align-items: flex-end; padding: 12px 14px; color: #fff; }
+  .banner .icon { position: absolute; right: 12px; top: 8px; font-size: 3rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,.25)); }
+  .banner h3 { margin: 0; font-size: 1.15rem; text-shadow: 0 2px 8px rgba(0,0,0,.35); }
+  .banner .state { font-size: .8rem; opacity: .95; text-shadow: 0 1px 4px rgba(0,0,0,.35); }
+  .body { padding: 14px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .dest p { margin: 0; color: var(--muted); font-size: .88rem; flex: 1; line-height: 1.45; }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag { background: var(--soft); color: var(--brand); font-size: .74rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; text-transform: capitalize; }
+  .best { font-size: .8rem; color: var(--ink); }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .price { font-size: .82rem; color: var(--muted); } .price b { color: var(--ink); font-size: 1.05rem; }
+  .plan { border: 0; background: linear-gradient(135deg, var(--accent), #22d3ee); color: #fff; border-radius: 999px; padding: 7px 14px; cursor: pointer; font: inherit; font-size: .85rem; font-weight: 600; }
+  .plan:hover { filter: brightness(1.08); }
+
+  aside { align-self: start; position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; }
+  .empty { color: var(--muted); font-size: .9rem; line-height: 1.5; text-align: center; padding: 16px 6px; }
+  .empty::before { content: "🧳"; display: block; font-size: 2.4rem; margin-bottom: 6px; }
+  details.trip { background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; padding: 11px 13px; margin-bottom: 10px; }
+  details.trip summary { cursor: pointer; font-weight: 700; list-style: none; }
+  details.trip summary::-webkit-details-marker { display: none; }
+  .meta { color: var(--muted); font-size: .8rem; font-weight: 400; margin-top: 3px; line-height: 1.4; }
+  .day { font-size: .85rem; line-height: 1.45; margin: 9px 0 0; }
+  .day b { color: var(--brand); }
+  .del { margin-top: 10px; background: none; border: 0; color: #b91c1c; cursor: pointer; font: inherit; font-size: .8rem; padding: 0; }
+
+  /* Chat widget */
+  #chat-toggle { position: fixed; right: 20px; bottom: 20px; background: linear-gradient(135deg, var(--brand), #06b6d4); color: #fff; border: 0; border-radius: 999px; padding: 14px 22px; font: inherit; font-weight: 700; cursor: pointer; box-shadow: 0 8px 24px rgba(3,105,161,.4); z-index: 10; }
+  #chat { position: fixed; right: 20px; bottom: 82px; width: min(400px, calc(100vw - 32px)); height: min(600px, calc(100vh - 110px)); background: var(--card); border-radius: 20px; box-shadow: 0 20px 50px rgba(8,47,73,.3); display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
+  #chat[hidden] { display: none; }
+  .chat-head { background: linear-gradient(135deg, var(--brand-dark), var(--brand) 50%, #06b6d4); color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .chat-head button { background: rgba(255,255,255,.15); border: 0; border-radius: 8px; padding: 4px 8px; color: #fff; cursor: pointer; font: inherit; font-size: .85rem; }
+  #log { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 9px; background: #f3f9fd; }
+  .msg { max-width: 88%; padding: 10px 13px; border-radius: 16px; white-space: pre-wrap; line-height: 1.45; font-size: .92rem; }
+  .bot { background: #fff; border: 1px solid var(--line); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .me { background: linear-gradient(135deg, var(--brand), #0284c7); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .err { background: #fee2e2; color: #7f1d1d; align-self: flex-start; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; background: #f3f9fd; }
+  .chips button { border: 1px solid #bae6fd; background: #fff; color: var(--brand); border-radius: 999px; padding: 5px 11px; font-size: .8rem; cursor: pointer; }
+  form { display: flex; border-top: 1px solid var(--line); padding: 8px; gap: 8px; }
+  form input { flex: 1; border: 1px solid var(--line); border-radius: 999px; padding: 10px 14px; font: inherit; outline: none; min-width: 0; }
+  form input:focus { border-color: var(--brand); }
+  form button { border: 0; background: var(--accent); color: #fff; border-radius: 999px; padding: 0 18px; font: inherit; font-weight: 600; cursor: pointer; }
+  form button:disabled { background: #7dd3fc; cursor: wait; }
+</style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <span class="eyebrow">AI trip planner for India</span>
+    <h1>Wanderly</h1>
+    <p>Tell our AI where, when and how you like to travel. It checks the weather, plans each day and estimates your budget.</p>
+    <button class="cta" onclick="openChat()">Plan a trip with AI</button>
+  </div>
+  <svg viewBox="0 0 1440 150" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#0c4a6e" opacity=".55" d="M0 90 L160 30 L300 85 L470 15 L640 80 L800 35 L980 90 L1150 25 L1320 75 L1440 45 V150 H0Z"/>
+    <path fill="#082f49" opacity=".75" d="M0 115 L200 60 L360 110 L540 55 L720 115 L900 65 L1080 112 L1260 60 L1440 100 V150 H0Z"/>
+    <path fill="#eef6fb" d="M0 140 Q360 105 720 135 T1440 128 V150 H0Z"/>
+  </svg>
+</header>
+
+<main>
+  <section>
+    <h2>Destinations</h2>
+    <div class="filters" id="filters"></div>
+    <div class="grid" id="grid"></div>
+  </section>
+  <aside>
+    <h2>My trips</h2>
+    <div id="trips"><p class="empty">No saved trips yet. Plan one in the chat and say "save it".</p></div>
+  </aside>
+</main>
+
+<button id="chat-toggle" onclick="toggleChat()">✈️ Plan with AI</button>
+<div id="chat" hidden>
+  <div class="chat-head">
+    <strong>✈️ Wanderly assistant</strong>
+    <span><button onclick="newChat()" title="Start a new conversation">New chat</button> <button onclick="toggleChat()" aria-label="Close">✕</button></span>
+  </div>
+  <div id="log"></div>
+  <div class="chips" id="chips">
+    <button>Where should I go in December?</button>
+    <button>3-day budget trip for 2 from Delhi</button>
+    <button>Beach trip under ₹3000 a day</button>
+  </div>
+  <form id="form">
+    <input id="input" placeholder="Where do you want to go?" autocomplete="off" maxlength="2000">
+    <button id="send">Send</button>
+  </form>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const money = (n) => "₹" + Number(n).toLocaleString("en-IN");
+
+let sessionId = localStorage.getItem("wanderly_session");
+if (!sessionId) { sessionId = crypto.randomUUID(); localStorage.setItem("wanderly_session", sessionId); }
+
+// Banner colour and icon for each destination card.
+const LOOKS = {
+  goa:       { icon: "🏖️", bg: "linear-gradient(135deg, #0891b2, #22d3ee)" },
+  jaipur:    { icon: "🏰", bg: "linear-gradient(135deg, #1d4ed8, #60a5fa)" },
+  manali:    { icon: "🏔️", bg: "linear-gradient(135deg, #0c4a6e, #7dd3fc)" },
+  alleppey:  { icon: "🛶", bg: "linear-gradient(135deg, #0f766e, #2dd4bf)" },
+  rishikesh: { icon: "🧘", bg: "linear-gradient(135deg, #0369a1, #67e8f9)" },
+  udaipur:   { icon: "🌅", bg: "linear-gradient(135deg, #1e40af, #38bdf8)" },
+  leh:       { icon: "🏍️", bg: "linear-gradient(135deg, #082f49, #0284c7)" },
+  varanasi:  { icon: "🪔", bg: "linear-gradient(135deg, #155e75, #06b6d4)" },
+  default:   { icon: "✈️", bg: "linear-gradient(135deg, #0369a1, #22d3ee)" },
+};
+
+let destinations = [];
+let filter = "all";
+
+async function loadDestinations() {
+  const data = await (await fetch("/api/destinations")).json();
+  destinations = data.items;
+  const types = ["all", ...new Set(destinations.flatMap((d) => d.types))];
+  $("filters").innerHTML = types.map((t) => `<button data-t="${esc(t)}">${esc(t)}</button>`).join("");
+  $("filters").onclick = (e) => { if (e.target.dataset.t) { filter = e.target.dataset.t; renderGrid(); } };
+  renderGrid();
+}
+
+function renderGrid() {
+  [...$("filters").children].forEach((b) => b.classList.toggle("active", b.dataset.t === filter));
+  const list = destinations.filter((d) => filter === "all" || d.types.includes(filter));
+  $("grid").innerHTML = list.map((d) => `
+    <article class="dest">
+      <div class="banner" style="background:${(LOOKS[d.id] || LOOKS.default).bg}">
+        <span class="icon">${(LOOKS[d.id] || LOOKS.default).icon}</span>
+        <div><h3>${esc(d.name)}</h3><div class="state">${esc(d.state)}</div></div>
+      </div>
+      <div class="body">
+        <div class="tags">${d.types.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+        <p>${esc(d.summary)}</p>
+        <div class="best">🗓️ Best: ${esc(d.best_months.map((m) => m.slice(0, 3)).join(", "))}</div>
+        <div class="row">
+          <span class="price">from <b>${money(d.from_per_day)}</b>/day</span>
+          <button class="plan" data-name="${esc(d.name)}">Plan trip</button>
+        </div>
+      </div>
+    </article>`).join("");
+}
+
+$("grid").addEventListener("click", (e) => {
+  const name = e.target.dataset && e.target.dataset.name;
+  if (name) { openChat(); send(`I'd like to plan a trip to ${name}.`); }
+});
+
+function renderTrips(trips) {
+  if (!trips.length) { $("trips").innerHTML = `<p class="empty">No saved trips yet. Plan one in the chat and say "save it".</p>`; return; }
+  $("trips").innerHTML = trips.slice().reverse().map((t) => `
+    <details class="trip">
+      <summary>${esc(t.title)}
+        <div class="meta">${esc(t.destination)} · ${t.days} days · ${t.travellers} ${t.travellers > 1 ? "people" : "person"} · ${esc(t.level)}<br>
+        ${t.start_date ? esc(t.start_date) + " · " : ""}about ${money(t.estimated_total)}</div>
+      </summary>
+      ${t.day_plans.map((p, i) => `<p class="day"><b>Day ${i + 1}:</b> ${esc(p)}</p>`).join("")}
+      <button class="del" data-id="${esc(t.id)}">Delete trip</button>
+    </details>`).join("");
+}
+
+$("trips").addEventListener("click", async (e) => {
+  const id = e.target.dataset && e.target.dataset.id;
+  if (!id || !confirm("Delete this trip?")) return;
+  const res = await fetch(`/api/trips/${sessionId}/${id}`, { method: "DELETE" });
+  if (res.ok) renderTrips(await res.json());
+});
+
+async function loadTrips() { renderTrips(await (await fetch(`/api/trips/${sessionId}`)).json()); }
+
+function addMsg(text, cls) {
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  div.textContent = text;
+  $("log").appendChild(div);
+  $("log").scrollTop = $("log").scrollHeight;
+  return div;
+}
+
+function greet() {
+  $("log").innerHTML = "";
+  addMsg("Hi! I'm Wanderly. Tell me when you want to travel, for how many days, and what you enjoy (beaches, mountains, history, food...). I'll suggest places and plan each day.", "bot");
+}
+
+function toggleChat() { $("chat").hidden = !$("chat").hidden; if (!$("chat").hidden) $("input").focus(); }
+function openChat() { $("chat").hidden = false; $("input").focus(); }
+
+async function newChat() {
+  await fetch(`/api/reset/${sessionId}`, { method: "POST" });
+  greet();
+  $("chips").hidden = false;
+}
+
+async function send(text) {
+  text = text.trim();
+  if (!text || $("send").disabled) return;
+  addMsg(text, "me");
+  $("input").value = "";
+  $("chips").hidden = true;
+  $("send").disabled = true;
+  const typing = addMsg("Planning…", "bot");
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId, message: text }),
+    });
+    const data = await res.json();
+    typing.remove();
+    if (!res.ok) { addMsg(data.detail || "Something went wrong.", "err"); return; }
+    addMsg(data.reply, "bot");
+    renderTrips(data.trips);
+  } catch {
+    typing.remove();
+    addMsg("Couldn't reach the server. Is it running?", "err");
+  } finally {
+    $("send").disabled = false;
+    $("input").focus();
+  }
+}
+
+$("form").onsubmit = (e) => { e.preventDefault(); send($("input").value); };
+$("chips").onclick = (e) => { if (e.target.tagName === "BUTTON") send(e.target.textContent); };
+
+greet();
+loadDestinations();
+loadTrips();
+</script>
+</body>
+</html>
